@@ -1,5 +1,5 @@
 
-const corsHeaders = {
+export const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type'
@@ -43,7 +43,6 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     const regx2 = new RegExp(`href="/j\\?code(=\\w{5}(?:&amp;start=\\d{1,5})?)".target="\\w{5,6}"`, "ig")
     const regx3 = new RegExp(`(?:class=\"page\" )?href="/search/subtitle/(\\S{1,33}\\?page=\\d)"`, "ig")
 
-    console.log('regx3', regx3.test(text));
     text = text.replace(regx, '')
     text = text.replace(regx2, (a, b) => {
         // console.log(a,b);
@@ -54,9 +53,12 @@ export async function proxySearch(request: Request, setCache: (key: string, data
         return `onclick=window.open("/vsearch/${b}")`
     })
 
+    let codes = getCodes(text)
+    text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, codes)
+
     if (!page || page == '1') {
         await setCache(keywords, text)
-        console.log('write cache',keywords);
+        console.log('write cache', keywords);
     }
 
     let ip = request.headers.get('CF-Connecting-IP') || ''
@@ -66,4 +68,15 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     return new Response(text, {
         headers: corsHeaders
     });
+}
+
+function getCodes(text: string): string {
+    const regx = new RegExp(`data-code="(\\w{5})"`, "ig")
+    let codes = ''
+    let match;
+    while ((match = regx.exec(text)) !== null) {
+        const codeValue = match[1];
+        codes += `&code=${codeValue}`
+    }
+    return codes
 }

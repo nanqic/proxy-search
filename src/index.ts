@@ -1,4 +1,4 @@
-import { proxySearch } from "./requests";
+import { corsHeaders, proxySearch } from "./requests";
 
 export interface Env {
 	SEARCH_CACHE: KVNamespace
@@ -15,11 +15,14 @@ export default {
 		const pageParam = decodeURI(searchParams.get('page') || '')
 		console.log(`Hello ${navigator.userAgent} at path ${url.pathname}!`, keywordsParam);
 
-		if (url.pathname === "/api" && keywordsParam != '') {
+		if (url.pathname === "/api" && keywordsParam != ''
+			&& request.method == 'POST') {
 			let cache = await getCache(keywordsParam)
 			if (cache) {
 				console.log('get cache', keywordsParam);
-				return new Response(cache)
+				return new Response(cache, {
+					headers: corsHeaders
+				})
 			}
 
 			return await proxySearch(request, setCache, keywordsParam, pageParam)
