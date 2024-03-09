@@ -1,8 +1,9 @@
 name = "proxy-search"
 main = "src/index.ts"
 compatibility_date = "2024-03-04"
+
 kv_namespaces = [
-  { binding = "SEARCH_CACHE", id = "d4e56ede92e24b4784325e0a2ac3bdd2" }
+  { binding = "SEARCH_CACHE", id = "f3899e7c165c4d40a66877a7833da54d" }
 ]
 
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
