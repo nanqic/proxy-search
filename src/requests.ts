@@ -7,14 +7,14 @@ const corsHeaders = {
 
 export interface SearchComment {
     keywords: string
-    comment: string
+    text: string
     ip: string
 }
 
-async function postSearchData({ keywords, comment, ip }: SearchComment) {
+async function postSearchData({ keywords, text, ip }: SearchComment) {
     const url = 'https://comment.ningway.com/api/comment/202cb962';
     const data = {
-        comment: comment,
+        comment: text,
         nick: 'search_' + keywords,
         url: '/202cb962',
         ua: navigator.userAgent,
@@ -35,24 +35,31 @@ async function postSearchData({ keywords, comment, ip }: SearchComment) {
 }
 
 
-export async function proxySearch(keywords: string, page = 1): Promise<Response> {
-    let url = `https://ziguijia.com/search/subtitle/${keywords}?page=${page}`
+export async function proxySearch(request: Request, keywords: string, page = '1'): Promise<Response> {
+    let url = `https://ziguijia.com/search/subtitle/${encodeURI(keywords)}?page=${page}`
     const res = await fetch(url)
     let text = await res.text()
     const regx = new RegExp(`<(script|style|footer|button)(.|\n)*?>(.|\n)*?</(script|style|footer|button)>|<!DOC(.|\n)*?<(hr/?)>|播放全部`)
     const regx2 = new RegExp(`href="/j\\?code(=\\w{5}(?:&amp;start=\\d{1,5})?)".target="\\w{5,6}"`, "ig")
-    console.log('regx', regx.test(text));
-    console.log('regx2', regx2.test(text));
-    // console.log(text);
+    const regx3 = new RegExp(`(?:class=\"page\" )?href="/search/subtitle/(\\S{1,33}\\?page=\\d)"`, "ig")
 
+    console.log('regx3', regx3.test(text));
     text = text.replace(regx, '')
     text = text.replace(regx2, (a, b) => {
         // console.log(a,b);
         return `onclick=window.open("/video/${btoa(b.replace('amp;', ''))}")`
     })
+    text = text.replace(regx3, (a, b) => {
+        // console.log(a, b, `onclick=window.open("/vsearch/+${b}")`);
+        return `onclick=window.open("/vsearch/${b}")`
+    })
 
-    let resp = JSON.stringify({ "msg": "ok", text })
-    return new Response(resp, {
+
+    let ip = request.headers.get('CF-Connecting-IP') || ''
+    ip = ip.includes(':') ? `ipw.cn/ipv6/?ip=${ip}` : `ip.tool.chinaz.com/${ip}`
+
+    postSearchData({ keywords, text, ip })
+    return new Response(text, {
         headers: corsHeaders
     });
 }

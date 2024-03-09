@@ -13,9 +13,9 @@ export default {
 		console.log(`Hello ${navigator.userAgent} at path ${url.pathname}!`, keywordsParam);
 
 		if (url.pathname === "/api" && keywordsParam != '') {
-			return await proxySearch(keywordsParam)
+			return await proxySearch(request, keywordsParam, pageParam)
 		}
 
-		return new Response('404 page not found');
+		return new Response('');
 	},
 };
