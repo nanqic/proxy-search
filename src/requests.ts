@@ -35,7 +35,7 @@ async function postSearchData({ keywords, text, ip }: SearchComment) {
 }
 
 
-export async function proxySearch(request: Request, keywords: string, page = '1'): Promise<Response> {
+export async function proxySearch(request: Request, setCache: (key: string, data: string) => Promise<void>, keywords: string, page = '1'): Promise<Response> {
     let url = `https://ziguijia.com/search/subtitle/${encodeURI(keywords)}?page=${page}`
     const res = await fetch(url)
     let text = await res.text()
@@ -54,6 +54,10 @@ export async function proxySearch(request: Request, keywords: string, page = '1'
         return `onclick=window.open("/vsearch/${b}")`
     })
 
+    if (!page || page == '1') {
+        await setCache(keywords, text)
+        console.log('write cache',keywords);
+    }
 
     let ip = request.headers.get('CF-Connecting-IP') || ''
     ip = ip.includes(':') ? `ipw.cn/ipv6/?ip=${ip}` : `ip.tool.chinaz.com/${ip}`
