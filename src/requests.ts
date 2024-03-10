@@ -41,7 +41,7 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     let text = await res.text()
     const regx = new RegExp(`<(script|style|footer|button)(.|\n)*?>(.|\n)*?</(script|style|footer|button)>|<!DOC(.|\n)*?<(hr/?)>|播放全部`)
     const regx2 = new RegExp(`href="/j\\?code(=\\w{5}(?:&amp;start=\\d{1,5})?)".target="\\w{5,6}"`, "ig")
-    const regx3 = new RegExp(`(?:class="page" )?href="/search/subtitle/(\\S{1,33}\\?page=\\d{1,2})"`, "ig")
+    const regx3 = new RegExp(`(?:class="page" )?href="/search/subtitle/(\\S{1,512}\\?page=\\d{1,2})"`, "ig")
 
     text = text.replace(regx, '')
     text = text.replace(regx2, (a, b) => {
@@ -60,7 +60,9 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     ip = ip.includes(':') ? `ipw.cn/ipv6/?ip=${ip}` : `ip.tool.chinaz.com/${ip}`
 
     postSearchData({ keywords: keywords + page, text, ip })
-    await setCache(keywords + page, text)
+    if (!text.includes("没有视频符合")) {
+        await setCache(keywords + page, text)
+    }
 
     return new Response(text, {
         headers: corsHeaders
