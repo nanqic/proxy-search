@@ -57,7 +57,7 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, codes)
 
     if (!page || page == '1') {
-        await setCache(keywords, text)
+        await setCache(keywords + page, text)
         console.log('write cache', keywords);
     }
 

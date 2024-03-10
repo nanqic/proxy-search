@@ -17,7 +17,7 @@ export default {
 
 		if (url.pathname === "/api" && keywordsParam != ''
 			&& request.method == 'POST') {
-			let cache = await getCache(keywordsParam)
+			let cache = await getCache(keywordsParam + pageParam)
 			if (cache) {
 				console.log('get cache', keywordsParam);
 				return new Response(cache, {
