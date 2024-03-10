@@ -25,7 +25,7 @@ export default {
 				})
 			}
 
-			return await proxySearch(request, setCache, keywordsParam + pageParam, pageParam)
+			return await proxySearch(request, setCache, keywordsParam, pageParam)
 		}
 
 		return new Response('');
