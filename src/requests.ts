@@ -12,11 +12,11 @@ export interface SearchComment {
 }
 
 async function postSearchData({ keywords, text, ip }: SearchComment) {
-    const url = 'https://comment.ningway.com/api/comment/202cb962';
+    const url = 'https://comment.ningway.com/api/comment/202c';
     const data = {
         comment: text,
-        nick: 'search_' + keywords,
-        url: '/202cb962',
+        nick: '@' + keywords,
+        url: '/202c',
         ua: navigator.userAgent,
         link: ip
     };
@@ -35,7 +35,7 @@ async function postSearchData({ keywords, text, ip }: SearchComment) {
 }
 
 
-export async function proxySearch(request: Request, setCache: (key: string, data: string) => Promise<void>, keywords: string, page = '1'): Promise<Response> {
+export async function proxySearch(request: Request, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> {
     let url = `https://ziguijia.com/search/subtitle/${encodeURI(keywords)}?page=${page}`
     const res = await fetch(url)
     let text = await res.text()
@@ -56,10 +56,7 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     let codes = getCodes(text)
     text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, codes)
 
-    if (!page || page == '1') {
-        await setCache(keywords + page, text)
-        console.log('write cache', keywords);
-    }
+    await setCache(keywords + page, text)
 
     let ip = request.headers.get('CF-Connecting-IP') || ''
     ip = ip.includes(':') ? `ipw.cn/ipv6/?ip=${ip}` : `ip.tool.chinaz.com/${ip}`
