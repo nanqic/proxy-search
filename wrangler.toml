@@ -3,7 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2024-03-04"
 
 kv_namespaces = [
-  { binding = "SEARCH_CACHE", id = "f3899e7c165c4d40a66877a7833da54d" }
+  { binding = "SEARCH_CACHE", id = "68d2eca77f484edd9ba612219194fde6" }
 ]
 
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
