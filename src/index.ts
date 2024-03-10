@@ -12,11 +12,15 @@ export default {
 		const url = new URL(request.url);
 		const searchParams = new URLSearchParams(url.search)
 		const keywordsParam = decodeURI(searchParams.get('keywords') || '')
-		const pageParam = decodeURI(searchParams.get('page') || '')
+		let pageParam = decodeURI(searchParams.get('page') || '')
 		console.log(`Hello ${navigator.userAgent} at path ${url.pathname}!`, keywordsParam);
 
 		if (url.pathname === "/api" && keywordsParam != ''
 			&& request.method == 'POST') {
+			if (pageParam == '1') {
+				pageParam = ''
+			}
+
 			let cache = await getCache(keywordsParam + pageParam)
 			if (cache) {
 				console.log('get cache', keywordsParam);

@@ -59,9 +59,6 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     let ip = request.headers.get('CF-Connecting-IP') || ''
     ip = ip.includes(':') ? `ipw.cn/ipv6/?ip=${ip}` : `ip.tool.chinaz.com/${ip}`
 
-    if (page == '1') {
-        page = ''
-    }
     postSearchData({ keywords: keywords + page, text, ip })
     await setCache(keywords + page, text)
 
