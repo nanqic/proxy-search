@@ -56,12 +56,15 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     let codes = getCodes(text)
     text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, codes)
 
-    await setCache(keywords + page, text)
-
     let ip = request.headers.get('CF-Connecting-IP') || ''
     ip = ip.includes(':') ? `ipw.cn/ipv6/?ip=${ip}` : `ip.tool.chinaz.com/${ip}`
 
+    if (page == '1') {
+        page = ''
+    }
     postSearchData({ keywords: keywords + page, text, ip })
+    await setCache(keywords + page, text)
+
     return new Response(text, {
         headers: corsHeaders
     });
