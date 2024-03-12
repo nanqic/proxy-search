@@ -43,6 +43,7 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     const regx2 = new RegExp(`href="/j\\?code(=\\w{5}(?:&amp;start=\\d{1,5})?)".target="\\w{5,6}"`, "ig")
     const regx3 = new RegExp(`(?:class="page" )?href="/search/subtitle/(\\S{1,512}\\?page=\\d{1,2})"`, "ig")
 
+    text = text.replace('static.ziguijia.cn/javascripts/searchList.js', 'm.ningway.com/api/searchList.js')
     text = text.replace(regx, '')
     text = text.replace(regx2, (a, b) => {
         // console.log(a,b);
@@ -67,6 +68,23 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     return new Response(text, {
         headers: corsHeaders
     });
+}
+
+export async function proxySearchDetail(jsonParam: string) {
+    console.log(jsonParam);
+    let n = `https://ziguijia.com/q/search/${encodeURI(jsonParam)}`
+    let response = await fetch(n, {
+        method: 'GET',
+        headers: {
+            'Cookie': 'connect.sid=s%3ASJaN9Qn_pYFK0QNNsvJKPvquEHq_Gch7.hPD9sQjfgDPL4vZc8xAv7IHLI5HtQRoVtPSgokji0fU',
+            'Referer': 'https://ziguijia.com/search/subtitle/',
+        }
+    })
+    let detail: string = await response.text()
+    // console.log(detail);
+    return new Response(detail, {
+        headers: corsHeaders
+    })
 }
 
 function getCodes(text: string): string {
