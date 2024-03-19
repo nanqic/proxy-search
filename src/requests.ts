@@ -2,7 +2,8 @@
 export const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Cache-Control': 'public, max-age=604800'
 };
 
 export interface SearchComment {
@@ -58,7 +59,7 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, codes)
 
     let ip = request.headers.get('CF-Connecting-IP') || ''
-    ip = ip.includes(':') ? `ipw.cn/ipv6/?ip=${ip}` : `ip.tool.chinaz.com/${ip}`
+    ip = ip.includes(':') ? `www.ipshudi.com/${ip}` : `ip.tool.chinaz.com/${ip}`
 
     postSearchData({ keywords: keywords + page, text, ip })
     if (!text.includes("没有视频符合")) {
@@ -71,7 +72,7 @@ export async function proxySearch(request: Request, setCache: (key: string, data
 }
 
 export async function proxySearchDetail(jsonParam: string) {
-    console.log(jsonParam);
+    // console.log(jsonParam);
     let n = `https://ziguijia.com/q/search/${encodeURI(jsonParam)}`
     let response = await fetch(n, {
         method: 'GET',
