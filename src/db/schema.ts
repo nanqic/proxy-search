@@ -12,6 +12,10 @@ export const reqCount = sqliteTable('ReqCount', {
     ipIdx: uniqueIndex('ipIdx').on(reqCount.ip),
 }));
 
+/**
+ * req: 总缓存数;
+ * newReq: 当日缓存数;
+ */
 export interface reqCountT {
     date: string;
     id: number;

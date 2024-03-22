@@ -18,7 +18,7 @@ export const getStatByIp = async (db: DrizzleD1Database, ip: string): Promise<re
 
 export const removeLimit = async (db: DrizzleD1Database) => {
     await db.update(reqCount)
-        .set({ req: 0, newReq: 0 })
+        .set({ newReq: 0 })
         .where(eq(reqCount.date, formattedYesterday()))
         .execute()
 }
@@ -36,6 +36,9 @@ export const getIpCountry = (req: Request): string => {
 
 export const countUse = async (db: DrizzleD1Database, ip: string, country: string, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
     const counts = await getStatByIp(db, ip)
+    let ipAddr = ip.includes(':') ? `www.ipshudi.com/${ip}` : `ip.tool.chinaz.com/${ip}`
+    await postSearchData({ keywords: keywords + page, comment: counts?.req + country + ip.slice(-3), link: ipAddr })
+
     if (counts != null) {
         const { id, req, newReq, country } = counts
         if (country != 'CN') {
@@ -53,9 +56,6 @@ export const countUse = async (db: DrizzleD1Database, ip: string, country: strin
         // 创建计数
         await db.insert(reqCount).values({ ip, req: 1, newReq: 1, country, date: formattedToday() })
     }
-
-    let ipAddr = ip.includes(':') ? `www.ipshudi.com/${ip}` : `ip.tool.chinaz.com/${ip}`
-    await postSearchData({ keywords: keywords + page, comment: country, link: ipAddr })
 
     return await proxySearch(setCache, keywords, page)
 }
