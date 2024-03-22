@@ -41,7 +41,7 @@ export const getIpCountry = (req: Request): string => {
 export const countUse = async (db: DrizzleD1Database, ip: string, country: string, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
     const counts = await getStatByIp(db, ip)
     let ipAddr = ip.includes(':') ? `www.ipshudi.com/${ip}` : `ip.tool.chinaz.com/${ip}`
-    await postSearchData({ keywords: keywords + page, comment: (counts ? counts.req : '') + country + ip.slice(-3), link: ipAddr })
+    await postSearchData({ keywords: keywords + page, comment: (counts?.req ? counts.req : '') + country + ip.slice(-3), link: ipAddr })
 
     if (counts != null) {
         const { id, req, newReq, country } = counts
