@@ -4,8 +4,12 @@ compatibility_date = "2024-03-04"
 
 kv_namespaces = [
   { binding = "SEARCH_CACHE", id = "d9aebd94f7794a7dac82da795b38f225" },
-  { binding = "SEARCH_STAT", id = "e3b81157aee64393b7f26a64f7eaf1d4" }
 ]
+
+[[d1_databases]]
+binding = "DB" # i.e. available in your Worker on env.DB
+database_name = "req_limit"
+database_id = "c7c9930a-0c20-4414-a54a-6fb507ccce6e"
 
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
 # Note: Use secrets to store sensitive data.

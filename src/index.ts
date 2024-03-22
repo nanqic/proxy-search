@@ -1,54 +1,60 @@
 import { corsHeaders, proxySearch, proxySearchDetail } from "./requests";
+import { drizzle } from 'drizzle-orm/d1'
+import { countUse, getIpCountry, } from "./db/dbUtil";
+import { reqCount } from "./db/schema";
 
 export interface Env {
 	SEARCH_CACHE: KVNamespace
-	SEARCH_STAT: KVNamespace
+	DB: D1Database
 }
-
-export const formattedDate = () => (new Date()).toLocaleDateString('zh-CN')
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		const ip = request.headers.get('CF-Connecting-IP') || ''
 		const setCache = async (key: string, data: string) => env.SEARCH_CACHE.put(key, data);
 		const getCache = async (key: string) => env.SEARCH_CACHE.get(key);
-		const getStat = async (key: string) => env.SEARCH_STAT.get(key);
-		const setStat = async (key: string, data: string) => env.SEARCH_STAT.put(key, data);
-		const getCacheList = async () => env.SEARCH_CACHE.list();
+		// const getCacheList = async () => env.SEARCH_CACHE.list();
 		const url = new URL(request.url);
 		const searchParams = new URLSearchParams(url.search)
 		const keywordsParam = decodeURI(searchParams.get('keywords') || '')
 		let pageParam = decodeURI(searchParams.get('page') || '')
 		const jsonParam = decodeURI(searchParams.get('json') || '')
 
-		// console.log(`Hello ${navigator.userAgent} at path ${url.pathname}!`, keywordsParam);
-		const statIncrease = async (key: string) => await setStat(key, parseInt((await getStat(key)) || '0') + 1 + '')
+		const db = drizzle(env.DB);
 
-		await statIncrease('request_since_0320')
 		if (url.pathname === "/api" && keywordsParam != ''
 			&& request.method == 'POST') {
-			if (pageParam == '1') {
-				pageParam = ''
-			}
+			pageParam == '1' && (pageParam = '')
 
 			let cache = await getCache(keywordsParam + pageParam)
 			if (cache) {
-				console.log('get cache', keywordsParam);
-				return new Response(cache, {
-					headers: corsHeaders
-				})
+				return new Response(cache, { headers: corsHeaders })
 			}
 
-			await statIncrease(formattedDate())
-			await statIncrease('cache_since_0320')
-			return await proxySearch(request, setCache, keywordsParam, pageParam)
-		} else if (url.pathname === "/api/q" && request.method == 'GET') {
-			await statIncrease('detail_since_0320')
+			// return await proxySearch(setCache, keywordsParam, pageParam)
+			return await countUse(db, ip, getIpCountry(request), setCache, keywordsParam, pageParam)
 
+		} else if (url.pathname === "/api/q" && request.method == 'GET') {
 			return await proxySearchDetail(jsonParam)
+		} else if (url.pathname === "/api/hotwords") {
+			let siteurl = `https://ziguijia.com/search`
+			const res = await fetch(siteurl)
+			let text = await res.text()
+
+			const regx = new RegExp(`<(script|style|footer|button)(.|\n)*?>(.|\n)*?</(script|style|footer|button)>|<!DOC(.|\n)*?<(hr/?)>`)
+			text = text.replace(regx, '')
+
+			let pattern = /<a.*?>(.*?)<\/a>/g;
+			let match, words = [];
+
+			while (match = pattern.exec(text)) {
+				words.push(match[1]); // 匹配到的<a>标签内的内容
+			}
+			return new Response(JSON.stringify(words), {
+				headers: corsHeaders
+			})
 		}
 
-		await statIncrease('illegal_since_0320')
-
-		return new Response(null)
+		return Response.json('')
 	},
 };

@@ -8,18 +8,18 @@ export const corsHeaders = {
 
 export interface SearchComment {
     keywords: string
-    text: string
-    ip: string
+    comment: string
+    link: string
 }
 
-async function postSearchData({ keywords, text, ip }: SearchComment) {
+export async function postSearchData({ keywords, comment, link }: SearchComment) {
     const url = 'https://comment.ningway.com/api/comment/202c';
     const data = {
-        comment: text,
+        comment,
         nick: '@' + keywords,
-        url: '/202c',
+        url: '/cc202c',
         ua: navigator.userAgent,
-        link: ip
+        link
     };
 
     const response = await fetch(url, {
@@ -35,8 +35,15 @@ async function postSearchData({ keywords, text, ip }: SearchComment) {
     }
 }
 
+export const listenMilareba = (): Response => {
+    return new Response(`今日资源有限，先听一下米拉日巴大师的 <a href='//a.hdcxb.net/login2' target='_blank'>道歌</a> 吧`, { headers: corsHeaders })
+}
 
-export async function proxySearch(request: Request, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> {
+export const toOfficialSite = (): Response => {
+    return new Response(`服务资源有限，您的网络可以直接在 <a href='//https://ziguijia.com/search?keywords=%E4%B8%BA%E5%88%A9%E4%BB%96' target='_blank'>官网</a> 搜索`, { headers: corsHeaders })
+}
+
+export async function proxySearch(setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> {
     let url = `https://ziguijia.com/search/subtitle/${encodeURI(keywords)}?page=${page}`
     const res = await fetch(url)
     let text = await res.text()
@@ -58,10 +65,6 @@ export async function proxySearch(request: Request, setCache: (key: string, data
     let codes = getCodes(text)
     text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, codes)
 
-    let ip = request.headers.get('CF-Connecting-IP') || ''
-    ip = ip.includes(':') ? `www.ipshudi.com/${ip}` : `ip.tool.chinaz.com/${ip}`
-
-    postSearchData({ keywords: keywords + page, text, ip })
     if (!text.includes("没有视频符合")) {
         await setCache(keywords + page, text)
     }
