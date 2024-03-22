@@ -1,6 +1,6 @@
 import { DrizzleD1Database } from "drizzle-orm/d1"
 import { reqCount, reqCountT } from "./schema"
-import { eq } from "drizzle-orm"
+import { and, eq, gt } from "drizzle-orm"
 import { listenMilareba, postSearchData, proxySearch, toOfficialSite } from "../requests"
 
 export const getCountryByIp = async (ip: string) => {
@@ -19,7 +19,11 @@ export const getStatByIp = async (db: DrizzleD1Database, ip: string): Promise<re
 export const removeLimit = async (db: DrizzleD1Database) => {
     await db.update(reqCount)
         .set({ newReq: 0 })
-        .where(eq(reqCount.date, formattedYesterday()))
+        .where(
+            and(
+                gt(reqCount, 0),
+                eq(reqCount.date, formattedYesterday()))
+        )
         .execute()
 }
 
