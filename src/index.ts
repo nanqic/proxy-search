@@ -1,7 +1,6 @@
-import { corsHeaders, proxySearch, proxySearchDetail } from "./requests";
+import { corsHeaders, postSearchData, proxySearchDetail } from "./requests";
 import { drizzle } from 'drizzle-orm/d1'
-import { countUse, getIpCountry, } from "./db/dbUtil";
-import { reqCount } from "./db/schema";
+import { countUse, getIpCountry, removeLimit, } from "./db/dbUtil";
 
 export interface Env {
 	SEARCH_CACHE: KVNamespace
@@ -56,5 +55,11 @@ export default {
 		}
 
 		return Response.json('')
+	},
+
+	async scheduled(event: any, env: Env, ctx: ExecutionContext) {
+		const db = drizzle(env.DB);
+
+		ctx.waitUntil(removeLimit(db))
 	},
 };

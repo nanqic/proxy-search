@@ -16,6 +16,13 @@ export const getStatByIp = async (db: DrizzleD1Database, ip: string): Promise<re
     return null
 }
 
+export const removeLimit = async (db: DrizzleD1Database) => {
+    await db.update(reqCount)
+        .set({ req: 0, newReq: 0 })
+        .where(eq(reqCount.date, formattedYesterday()))
+        .execute()
+}
+
 export const increaseReqCount = async (db: DrizzleD1Database, id: number, req: number, newReq: number) => {
     db.update(reqCount)
         .set({ req: req + 1, newReq: newReq + 1 })
@@ -53,4 +60,6 @@ export const countUse = async (db: DrizzleD1Database, ip: string, country: strin
     return await proxySearch(setCache, keywords, page)
 }
 
-export const formattedToday = () => (new Date()).toLocaleDateString('zh-CN')
+export const formattedToday = () => new Date().toLocaleDateString('zh-CN')
+
+export const formattedYesterday = () => new Date(Date.now() - 86400000).toLocaleDateString('zh-CN')

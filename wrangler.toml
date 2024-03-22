@@ -11,6 +11,9 @@ binding = "DB" # i.e. available in your Worker on env.DB
 database_name = "req_limit"
 database_id = "c7c9930a-0c20-4414-a54a-6fb507ccce6e"
 
+[triggers]
+crons = ["0 0 * * *"]
+
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
 # Note: Use secrets to store sensitive data.
 # Docs: https://developers.cloudflare.com/workers/platform/environment-variables
