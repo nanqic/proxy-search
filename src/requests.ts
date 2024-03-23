@@ -101,3 +101,22 @@ function getCodes(text: string): string {
     }
     return codes
 }
+
+export async function fetchHotwords(): Promise<Response> {
+    let siteurl = `https://ziguijia.com/search`
+    const res = await fetch(siteurl)
+    let text = await res.text()
+
+    const regx = new RegExp(`<(script|style|footer|button)(.|\n)*?>(.|\n)*?</(script|style|footer|button)>|<!DOC(.|\n)*?<(hr/?)>`)
+    text = text.replace(regx, '')
+
+    let pattern = /<a.*?>(.*?)<\/a>/g;
+    let match, words = [];
+
+    while (match = pattern.exec(text)) {
+        words.push(match[1]); // 匹配到的<a>标签内的内容
+    }
+    return new Response(JSON.stringify(words), {
+        headers: corsHeaders
+    })
+}

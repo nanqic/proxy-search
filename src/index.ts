@@ -1,4 +1,4 @@
-import { corsHeaders, proxySearchDetail } from "./requests";
+import { corsHeaders, fetchHotwords, proxySearchDetail } from "./requests";
 import { drizzle } from 'drizzle-orm/d1'
 import { countUse, getIpCountry, increaseDailyCount, removeLimit, } from "./db/dbUtil";
 
@@ -36,25 +36,9 @@ export default {
 		} else if (url.pathname === "/api/q" && request.method == 'GET') {
 			return await proxySearchDetail(jsonParam)
 		} else if (url.pathname === "/api/hotwords") {
-			let siteurl = `https://ziguijia.com/search`
-			const res = await fetch(siteurl)
-			let text = await res.text()
-
-			const regx = new RegExp(`<(script|style|footer|button)(.|\n)*?>(.|\n)*?</(script|style|footer|button)>|<!DOC(.|\n)*?<(hr/?)>`)
-			text = text.replace(regx, '')
-
-			let pattern = /<a.*?>(.*?)<\/a>/g;
-			let match, words = [];
-
-			while (match = pattern.exec(text)) {
-				words.push(match[1]); // 匹配到的<a>标签内的内容
-			}
-			return new Response(JSON.stringify(words), {
-				headers: corsHeaders
-			})
+			return await fetchHotwords()
 		} else if (url.pathname === "/api/visit") {
-			const res = await increaseDailyCount(db, ip)
-			return Response.json(res)
+			return Response.json(await increaseDailyCount(db, ip))
 		}
 
 		// return Response.json(await db.select().from(reqCount))
