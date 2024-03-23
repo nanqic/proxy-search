@@ -29,7 +29,7 @@ export const increaseDailyCount = async (db: DrizzleD1Database, ip: string) => {
     if (res?.status?.includes(ip)) return db.update(reqCount)
         .set({ req: (res?.req || 0) + 1 })
         .where(eq(reqCount.id, todayNumber()))
-        .execute()
+        .returning({ count: reqCount.req })
 
     return db.insert(reqCount)
         .values({ id: todayNumber(), req: (res?.req || 0) + 1, newReq: (res?.newReq || 0) + 1, ip: '', status: ip, date: formattedToday() })
@@ -40,7 +40,8 @@ export const increaseDailyCount = async (db: DrizzleD1Database, ip: string) => {
                 newReq: (res?.newReq || 0) + 1,
                 status: `${res?.status} | ${ip}`
             }
-        }).returning({ count: reqCount.req })
+        })
+        .returning({ count: reqCount.req })
 }
 
 export const increaseReqCount = async (db: DrizzleD1Database, id: number, req: number, newReq: number) => {
