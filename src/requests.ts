@@ -40,7 +40,7 @@ export const listenMilareba = (): Response => {
 }
 
 export const toOfficialSite = (): Response => {
-    return new Response(`服务资源有限，您的网络可以直接在 <a href='//https://ziguijia.com/search?keywords=%E4%B8%BA%E5%88%A9%E4%BB%96' target='_blank'>官网</a> 搜索`, { headers: corsHeaders })
+    return new Response(`服务资源有限，您的网络可以直接在 <a href='//https://ziguijia.com/search?keywords=%E4%B8%BA%E5%88%A9%E4%BB%96' target='_blank'>官网</a> 搜索。如有问题请联系QQ：<a href='https://qm.qq.com/q/EuMCvavDpe' target='_blank'> oningway </a>`, { headers: corsHeaders })
 }
 
 export async function proxySearch(setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> {

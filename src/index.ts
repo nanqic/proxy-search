@@ -1,6 +1,6 @@
-import { corsHeaders, postSearchData, proxySearchDetail } from "./requests";
+import { corsHeaders, proxySearchDetail } from "./requests";
 import { drizzle } from 'drizzle-orm/d1'
-import { countUse, getIpCountry, removeLimit, } from "./db/dbUtil";
+import { countUse, getIpCountry, increaseDailyCount, removeLimit, } from "./db/dbUtil";
 
 export interface Env {
 	SEARCH_CACHE: KVNamespace
@@ -52,14 +52,17 @@ export default {
 			return new Response(JSON.stringify(words), {
 				headers: corsHeaders
 			})
+		} else if (url.pathname === "/api/visit") {
+			const res = await increaseDailyCount(db, ip)
+			return Response.json(res)
 		}
 
+		// return Response.json(await db.select().from(reqCount))
 		return Response.json('')
 	},
 
 	async scheduled(event: any, env: Env, ctx: ExecutionContext) {
 		const db = drizzle(env.DB);
-
 		ctx.waitUntil(removeLimit(db))
 	},
 };

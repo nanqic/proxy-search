@@ -1,12 +1,14 @@
 import { DrizzleD1Database } from "drizzle-orm/d1"
 import { reqCount, reqCountT } from "./schema"
-import { and, eq, gt } from "drizzle-orm"
+import { eq, isNull } from "drizzle-orm"
 import { listenMilareba, postSearchData, proxySearch, toOfficialSite } from "../requests"
 
 export const getCountryByIp = async (ip: string) => {
     const response = await fetch(`https://ipapi.co/${ip}/country/`)
     return await response.text()
 }
+
+const todayNumber = () => parseInt(formattedToday().replaceAll('/', ''))
 
 export const getStatByIp = async (db: DrizzleD1Database, ip: string): Promise<reqCountT | null> => {
     const result = await db.select().from(reqCount).where(eq(reqCount.ip, ip))
@@ -17,14 +19,21 @@ export const getStatByIp = async (db: DrizzleD1Database, ip: string): Promise<re
 }
 
 export const removeLimit = async (db: DrizzleD1Database) => {
-    await db.update(reqCount)
-        .set({ newReq: 0 })
-        .where(
-            and(
-                gt(reqCount, 0),
-                eq(reqCount.date, formattedYesterday()))
-        )
-        .execute()
+    return await db.delete(reqCount)
+        .where(isNull(reqCount.status))
+        .returning({ deletedId: reqCount.id })
+}
+
+export const increaseDailyCount = async (db: DrizzleD1Database, ip: string) => {
+    const res = (await db.select().from(reqCount).where(eq(reqCount.id, todayNumber()))).pop()
+    if (res?.ip.includes(ip)) return -1
+
+    return db.insert(reqCount)
+        .values({ id: todayNumber(), req: (res?.req || 0) + 1, newReq: 0, ip: '', date: formattedToday() })
+        .onConflictDoUpdate({
+            target: reqCount.id,
+            set: { req: (res?.req || 0) + 1, ip: res?.ip + ip, status: 'save' }
+        }).returning({ count: reqCount.req })
 }
 
 export const increaseReqCount = async (db: DrizzleD1Database, id: number, req: number, newReq: number) => {
@@ -38,27 +47,28 @@ export const getIpCountry = (req: Request): string => {
     return req.cf?.country + ''
 }
 
-export const countUse = async (db: DrizzleD1Database, ip: string, country: string, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
+export const countUse = async (db: DrizzleD1Database, ip: string, countryCode: string, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
     const counts = await getStatByIp(db, ip)
-    let ipAddr = ip.includes(':') ? `www.ipshudi.com/${ip}` : `ip.tool.chinaz.com/${ip}`
-    await postSearchData({ keywords: keywords + page, comment: (counts?.req ? counts.req : '') + country + ip.slice(-3), link: ipAddr })
-
+    let ipAddr = `www.ipuu.net/query/ip?search=/${ip}`
     if (counts != null) {
         const { id, req, newReq, country } = counts
         if (country != 'CN') {
             await db.insert(reqCount).values({ ip, req: 1, newReq: 1, country, date: formattedToday() })
                 .onConflictDoNothing()
+
             return toOfficialSite()
         }
 
         if (newReq >= 12) {
+            await postSearchData({ keywords: keywords + page, comment: `${newReq} ${ip.slice(-3)}`, link: ipAddr })
+
             return listenMilareba()
         }
         // 增加计数
         await increaseReqCount(db, id, req, newReq)
     } else {
         // 创建计数
-        await db.insert(reqCount).values({ ip, req: 1, newReq: 1, country, date: formattedToday() })
+        await db.insert(reqCount).values({ ip, req: 1, newReq: 1, country: countryCode, date: formattedToday() })
     }
 
     return await proxySearch(setCache, keywords, page)
