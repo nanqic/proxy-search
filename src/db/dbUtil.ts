@@ -8,7 +8,7 @@ export const getCountryByIp = async (ip: string) => {
     return await response.text()
 }
 
-const todayNumber = () => parseInt(formattedToday().slice(4).replaceAll('/', ''))
+const todayNumber = () => parseInt(formattedToday().slice(3).replaceAll('/', ''))
 
 export const getStatByIp = async (db: DrizzleD1Database, ip: string): Promise<reqCountT | null> => {
     const result = await db.select().from(reqCount).where(eq(reqCount.ip, ip))
@@ -29,7 +29,7 @@ export const increaseDailyCount = async (db: DrizzleD1Database, ip: string) => {
     if (res?.status?.includes(ip)) return -1
 
     return db.insert(reqCount)
-        .values({ id: todayNumber(), req: (res?.req || 0) + 1, newReq: 0, ip: '', date: formattedToday() })
+        .values({ id: todayNumber(), req: (res?.req || 0) + 1, newReq: 0, ip: '', status: ip, date: formattedToday() })
         .onConflictDoUpdate({
             target: reqCount.id,
             set: { req: (res?.req || 0) + 1, status: res?.status + ip }
