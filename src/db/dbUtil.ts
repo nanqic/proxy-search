@@ -26,13 +26,20 @@ export const removeLimit = async (db: DrizzleD1Database) => {
 
 export const increaseDailyCount = async (db: DrizzleD1Database, ip: string) => {
     const res = (await db.select().from(reqCount).where(eq(reqCount.id, todayNumber()))).pop()
-    if (res?.status?.includes(ip)) return -1
+    if (res?.status?.includes(ip)) return db.update(reqCount)
+        .set({ req: (res?.req || 0) + 1 })
+        .where(eq(reqCount.id, todayNumber()))
+        .execute()
 
     return db.insert(reqCount)
-        .values({ id: todayNumber(), req: (res?.req || 0) + 1, newReq: 0, ip: '', status: ip, date: formattedToday() })
+        .values({ id: todayNumber(), req: (res?.req || 0) + 1, newReq: (res?.newReq || 0) + 1, ip: '', status: ip, date: formattedToday() })
         .onConflictDoUpdate({
             target: reqCount.id,
-            set: { req: (res?.req || 0) + 1, status: res?.status + ip }
+            set: {
+                req: (res?.req || 0) + 1,
+                newReq: (res?.newReq || 0) + 1,
+                status: `${res?.status} | ${ip}`
+            }
         }).returning({ count: reqCount.req })
 }
 
