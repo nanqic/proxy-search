@@ -56,6 +56,7 @@ export const getIpCountry = (req: Request): string => {
 }
 
 export const countUse = async (db: DrizzleD1Database, ip: string, countryCode: string, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
+
     const counts = await getStatByIp(db, ip)
     let ipAddr = `www.ipuu.net/query/ip?search=/${ip}`
     if (counts != null) {
@@ -67,7 +68,7 @@ export const countUse = async (db: DrizzleD1Database, ip: string, countryCode: s
             return toOfficialSite()
         }
 
-        if (newReq >= 12) {
+        if (newReq > 15 || ip == '') {
             await postSearchData({ keywords: keywords + page, comment: `${newReq} ${ip.slice(-3)}`, link: ipAddr })
 
             return listenMilareba()
