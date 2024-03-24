@@ -38,7 +38,7 @@ export const increaseDailyCount = async (db: DrizzleD1Database, ip: string) => {
             set: {
                 req: (res?.req || 0) + 1,
                 newReq: (res?.newReq || 0) + 1,
-                status: `${res?.status} | ${ip}`
+                status: `${res?.status ? res?.status + ' | ' : ''}${ip}`
             }
         })
         .returning({ count: reqCount.req })
