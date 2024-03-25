@@ -1,6 +1,6 @@
 import { DrizzleD1Database } from "drizzle-orm/d1"
 import { reqCount, reqCountT } from "./schema"
-import { eq, isNull } from "drizzle-orm"
+import { eq, isNull, sql } from "drizzle-orm"
 import { listenMilareba, postSearchData, proxySearch, toOfficialSite } from "../requests"
 
 export const getCountryByIp = async (ip: string) => {
@@ -25,28 +25,25 @@ export const removeLimit = async (db: DrizzleD1Database) => {
 }
 
 export const increaseDailyCount = async (db: DrizzleD1Database, ip: string) => {
-    const res = (await db.select().from(reqCount).where(eq(reqCount.id, todayNumber()))).pop()
-    if (res?.status?.includes(ip)) return db.update(reqCount)
-        .set({ req: (res?.req || 0) + 1 })
-        .where(eq(reqCount.id, todayNumber()))
-        .returning({ count: reqCount.req })
-
     return db.insert(reqCount)
-        .values({ id: todayNumber(), req: (res?.req || 0) + 1, newReq: (res?.newReq || 0) + 1, ip: '', status: ip, date: formattedToday() })
+        .values({ id: todayNumber(), req: 1, newReq: 1, ip: '', status: ip, date: formattedToday() })
         .onConflictDoUpdate({
             target: reqCount.id,
             set: {
-                req: (res?.req || 0) + 1,
-                newReq: (res?.newReq || 0) + 1,
-                status: `${res?.status ? res?.status + ' | ' : ''}${ip}`
+                req: sql`${reqCount.req} + 1`,
+                newReq: sql`${reqCount.newReq} + 1`,
+                status: ip,
             }
         })
         .returning({ count: reqCount.req })
 }
 
-export const increaseReqCount = async (db: DrizzleD1Database, id: number, req: number, newReq: number) => {
+export const increaseReqCount = async (db: DrizzleD1Database, id: number) => {
     db.update(reqCount)
-        .set({ req: req + 1, newReq: newReq + 1 })
+        .set({
+            req: sql`${reqCount.req} + 1`,
+            newReq: sql`${reqCount.newReq} + 1`
+        })
         .where(eq(reqCount.id, id))
         .execute()
 }
@@ -58,9 +55,9 @@ export const getIpCountry = (req: Request): string => {
 export const countUse = async (db: DrizzleD1Database, ip: string, countryCode: string, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
 
     const counts = await getStatByIp(db, ip)
-    let ipAddr = `www.ipuu.net/query/ip?search=/${ip}`
+    let ipAddr = `www.ipuu.net/query/ip?search=${ip}`
     if (counts != null) {
-        const { id, req, newReq, country } = counts
+        const { id, newReq, country } = counts
         if (country != 'CN') {
             await db.insert(reqCount).values({ ip, req: 1, newReq: 1, country, date: formattedToday() })
                 .onConflictDoNothing()
@@ -74,7 +71,7 @@ export const countUse = async (db: DrizzleD1Database, ip: string, countryCode: s
             return listenMilareba()
         }
         // 增加计数
-        await increaseReqCount(db, id, req, newReq)
+        await increaseReqCount(db, id)
     } else {
         // 创建计数
         await db.insert(reqCount).values({ ip, req: 1, newReq: 1, country: countryCode, date: formattedToday() })
