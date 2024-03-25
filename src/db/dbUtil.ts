@@ -1,6 +1,6 @@
 import { DrizzleD1Database } from "drizzle-orm/d1"
 import { reqCount, reqCountT } from "./schema"
-import { eq, isNull, sql } from "drizzle-orm"
+import { eq, ne, sql } from "drizzle-orm"
 import { listenMilareba, postSearchData, proxySearch, toOfficialSite } from "../requests"
 
 export const getCountryByIp = async (ip: string) => {
@@ -19,14 +19,15 @@ export const getStatByIp = async (db: DrizzleD1Database, ip: string): Promise<re
 }
 
 export const removeLimit = async (db: DrizzleD1Database) => {
-    return await db.delete(reqCount)
-        .where(isNull(reqCount.status))
-        .returning({ deletedId: reqCount.id })
+    return await db.update(reqCount)
+        .set({ newReq: 0 })
+        .where(ne(reqCount.status, 'count'))
+        .execute()
 }
 
 export const increaseDailyCount = async (db: DrizzleD1Database) => {
     return db.insert(reqCount)
-        .values({ id: todayNumber(), req: 1, newReq: 1, ip: '', status: 'count', date: formattedToday() })
+        .values({ id: todayNumber(), req: 1, newReq: 0, ip: '', status: 'count', date: formattedToday() })
         .onConflictDoUpdate({
             target: reqCount.id,
             set: {
@@ -40,7 +41,7 @@ export const increaseDailyCount = async (db: DrizzleD1Database) => {
 export const increaseReqCount = async (db: DrizzleD1Database, id: number) => {
     db.update(reqCount)
         .set({
-            // req: sql`${reqCount.req} + 1`,
+            req: sql`${reqCount.req} + 1`,
             newReq: sql`${reqCount.newReq} + 1`
         })
         .where(eq(reqCount.id, id))
@@ -70,7 +71,7 @@ export const countUse = async (db: DrizzleD1Database, request: Request, setCache
     let ipAddr = `www.ipuu.net/query/ip?search=${info.ip}`
     if (counts != null) {
         const { id, newReq, country, status } = counts
-        if (country != 'CN') {
+        if (country && country != 'CN') {
             await db.insert(reqCount).values({ ip: info.ip, req: 1, newReq: 1, country, date: formattedToday() })
                 .onConflictDoNothing()
 
