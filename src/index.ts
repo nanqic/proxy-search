@@ -1,6 +1,6 @@
 import { corsHeaders, fetchHotwords, proxySearchDetail } from "./requests";
 import { drizzle } from 'drizzle-orm/d1'
-import { countUse, getIpCountry, increaseDailyCount, removeLimit, } from "./db/dbUtil";
+import { countUse, increaseDailyCount, removeLimit, } from "./db/dbUtil";
 
 export interface Env {
 	SEARCH_CACHE: KVNamespace
@@ -9,7 +9,6 @@ export interface Env {
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		const ip = request.headers.get('CF-Connecting-IP') || ''
 		const setCache = async (key: string, data: string) => env.SEARCH_CACHE.put(key, data);
 		const getCache = async (key: string) => env.SEARCH_CACHE.get(key);
 		// const getCacheList = async () => env.SEARCH_CACHE.list();
@@ -17,7 +16,6 @@ export default {
 		const searchParams = new URLSearchParams(url.search)
 		const keywordsParam = decodeURI(searchParams.get('keywords') || '')
 		let pageParam = decodeURI(searchParams.get('page') || '')
-		const jsonParam = decodeURI(searchParams.get('json') || '')
 
 		const db = drizzle(env.DB);
 
@@ -31,17 +29,20 @@ export default {
 			}
 
 			// return await proxySearch(setCache, keywordsParam, pageParam)
-			return await countUse(db, ip, getIpCountry(request), setCache, keywordsParam, pageParam)
+			return await countUse(db, request, setCache, keywordsParam, pageParam)
 
 		} else if (url.pathname === "/api/q" && request.method == 'GET') {
+			const jsonParam = decodeURI(searchParams.get('json') || '')
+
 			return await proxySearchDetail(jsonParam)
 		} else if (url.pathname === "/api/hotwords") {
 			return await fetchHotwords()
 		} else if (url.pathname === "/api/visit") {
-			return Response.json(await increaseDailyCount(db, ip))
+			return Response.json(await increaseDailyCount(db))
 		}
 
 		// return Response.json(await db.select().from(reqCount))
+
 		return Response.json('')
 	},
 

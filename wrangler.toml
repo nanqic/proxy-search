@@ -1,6 +1,7 @@
 name = "proxy-search"
 main = "src/index.ts"
 compatibility_date = "2024-03-04"
+compatibility_flags = [ "nodejs_compat" ]
 
 kv_namespaces = [
   { binding = "SEARCH_CACHE", id = "d9aebd94f7794a7dac82da795b38f225" },
