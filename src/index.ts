@@ -11,7 +11,7 @@ export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const setCache = async (key: string, data: string) => env.SEARCH_CACHE.put(key, data);
 		const getCache = async (key: string) => env.SEARCH_CACHE.get(key);
-		// const getCacheList = async () => env.SEARCH_CACHE.list();
+		const getCacheList = async () => env.SEARCH_CACHE.list();
 		const url = new URL(request.url);
 		const searchParams = new URLSearchParams(url.search)
 		const keywordsParam = decodeURI(searchParams.get('keywords') || '')
@@ -28,7 +28,6 @@ export default {
 				return new Response(cache, { headers: corsHeaders })
 			}
 
-			// return await proxySearch(setCache, keywordsParam, pageParam)
 			return await countUse(db, request, setCache, keywordsParam, pageParam)
 
 		} else if (url.pathname === "/api/q" && request.method == 'GET') {
