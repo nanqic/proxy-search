@@ -41,8 +41,6 @@ export default {
 			return Response.json(await increaseDailyCount(db))
 		}
 
-		// return Response.json(await db.select().from(reqCount))
-
 		return Response.json('')
 	},
 

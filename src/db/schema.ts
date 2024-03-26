@@ -1,27 +1,31 @@
 import { sqliteTable, text, integer, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
-export const reqCount = sqliteTable('ReqCount', {
-    id: integer('Id').primaryKey(),
-    ip: text('Ip').notNull(),
-    req: integer('Req').notNull(),
-    newReq: integer('NewReq').notNull(),
-    country: text('Country'),
-    status: text('Status'),
-    date: text('Date').notNull()
-}, (reqCount) => ({
-    ipIdx: uniqueIndex('ipIdx').on(reqCount.ip),
+export const stat = sqliteTable('stat', {
+    id: integer('id').primaryKey(),
+    ip: text('ip').notNull(),
+    total: integer('total').notNull(),
+    daily: integer('daily'),
+    city: text('city'),
+    status: text('status'),
+    geo: text('geo'),
+    date: text('date'),
+    words: text('words'),
+}, (stat) => ({
+    ipIdx: uniqueIndex('ipIdx').on(stat.ip),
 }));
 
 /**
  * req: 总缓存数;
  * newReq: 当日缓存数;
  */
-export interface reqCountT {
-    date: string;
+export interface Stat {
     id: number;
     ip: string;
-    req: number;
-    newReq: number;
-    country: string | null;
+    total: number;
+    daily: number | null
+    city: string | null;
     status: string | null;
+    geo: string | null;
+    date: string | null;
+    words: string | null;
 }
