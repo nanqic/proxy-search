@@ -7,9 +7,16 @@ const allowedCities = [
     'Chifeng',
 ]
 
-export const getCountryByIp = async (ip: string) => {
-    const response = await fetch(`https://ipapi.co/${ip}/country/`)
-    return await response.text()
+interface IpResult {
+    country: string;
+    province: string;
+    city: string;
+    isp: string;
+}
+
+export const getCityByIp = async (ip: string): Promise<IpResult> => {
+    const response = await fetch(`https://ip-query.vercel.app/api/ip?ip=${ip}`)
+    return await response.json() as IpResult
 }
 
 const todayNumber = () => parseInt(formattedToday().slice(3).replaceAll('/', ''))
@@ -62,11 +69,17 @@ interface IpInfo {
         lat: string
     }
 }
-export const getIpInfo = (req: Request): IpInfo => {
+export const getIpInfo = async (req: Request): Promise<IpInfo> => {
+    let city = req.cf?.city + ''
+    let ip = req.headers.get('CF-Connecting-IP') || ''
+
+    if (!city) {
+        city = (await getCityByIp(ip)).city
+    }
     return {
-        ip: req.headers.get('CF-Connecting-IP') || '',
+        ip,
         country: req.cf?.country + '',
-        city: req.cf?.city + '',
+        city,
         geo: {
             lon: (req.cf?.longitude + '').slice(0, -2),
             lat: (req.cf?.latitude + '').slice(0, -2),
@@ -75,7 +88,7 @@ export const getIpInfo = (req: Request): IpInfo => {
 }
 
 export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
-    const info = getIpInfo(req)
+    const info = await getIpInfo(req)
     const stats = await getStatByIp(db, info.ip.slice(0, 15))
 
     if (stats !== null) {
@@ -89,8 +102,9 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
         if (daily && daily > 20 && !allowedCities.includes(city || '')) {
             return listenMilareba()
         }
-        // // 增加计数
-        await increaseStat(db, id, `${words}|${keywords}`)
+        // 增加计数
+        words = words?.includes(keywords) ? words : `${words}|${keywords}`
+        await increaseStat(db, id, words)
     } else {
         // 创建计数
         await db.insert(stat).values({ ip: info.ip?.slice(0, 15), total: 1, daily: 1, city: info.city || '', date: formattedToday(), geo: JSON.stringify(info.geo), words: keywords }).onConflictDoNothing()
