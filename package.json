@@ -13,7 +13,7 @@
     "@cloudflare/workers-types": "^4.20240320.1",
     "drizzle-kit": "^0.20.14",
     "typescript": "^5.4.3",
-    "wrangler": "^3.37.0"
+    "wrangler": "^3.38.0"
   },
   "dependencies": {
     "drizzle-orm": "^0.30.4"
