@@ -109,7 +109,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
             city = cityres || province || country || '未知'
         }
 
-        await db.insert(stat).values({ ip: ip?.slice(0, 15), total: 1, daily: 1, city, date: formattedToday(), geo: JSON.stringify(geo), words: keywords, status: JSON.stringify(ipDetail) }).onConflictDoNothing()
+        await db.insert(stat).values({ ip: ip?.slice(0, 15), total: 1, daily: 1, city, date: formattedToday(), geo: JSON.stringify(geo), words: keywords, status: ipDetail?.isp }).onConflictDoNothing()
     }
 
     return await proxySearch(setCache, keywords, page)
