@@ -74,10 +74,10 @@ export const getIpInfo = async (req: Request): Promise<IpInfo> => {
     let city = req.cf?.city + ''
     let ip = req.headers.get('CF-Connecting-IP') || ''
 
-    // if (!city) {
-    const { city: resCity, province } = await getCityByIp(ip)
-    city = resCity || province
-    // }
+    if (!city) {
+        const { city: resCity, province, country } = await getCityByIp(ip)
+        city = resCity || province || country
+    }
     return {
         ip,
         country: req.cf?.country + '',
@@ -96,7 +96,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
     if (stats !== null) {
         let { id, daily, city, words } = stats
         if (info && info?.country != 'CN') {
-            await db.insert(stat).values({ ip: info.ip, total: 1, city: info.city, date: formattedToday() })
+            await db.insert(stat).values({ ip: info.ip, total: 1, city: info.city, date: formattedToday(), status: 'limit' })
                 .onConflictDoNothing()
             return toOfficialSite()
         }
