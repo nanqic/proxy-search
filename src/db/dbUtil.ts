@@ -5,6 +5,7 @@ import { Stat, stat } from "./schema"
 
 const allowedCities = [
     'Chifeng',
+    '赤峰市',
 ]
 
 interface IpResult {
@@ -73,9 +74,10 @@ export const getIpInfo = async (req: Request): Promise<IpInfo> => {
     let city = req.cf?.city + ''
     let ip = req.headers.get('CF-Connecting-IP') || ''
 
-    if (!city) {
-        city = (await getCityByIp(ip)).city
-    }
+    // if (!city) {
+    const { city: resCity, province } = await getCityByIp(ip)
+    city = resCity || province
+    // }
     return {
         ip,
         country: req.cf?.country + '',
