@@ -8,6 +8,7 @@ const allowedCities = [
     'Neijiang',
     '赤峰市',
     '内江市',
+    '珠海市',
 ]
 
 interface IpResult {
@@ -41,7 +42,7 @@ export const removeLimit = async (db: DrizzleD1Database) => {
 
 export const increaseDailyCount = async (db: DrizzleD1Database) => {
     return db.insert(stat)
-        .values({ id: todayNumber(), total: 1, ip: 'retain', date: formattedToday() })
+        .values({ id: todayNumber(), total: 1, ip: todayNumber() + '', date: formattedToday() })
         .onConflictDoUpdate({
             target: stat.id,
             set: {
@@ -117,6 +118,6 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
     return await proxySearch(setCache, keywords, page)
 }
 
-export const formattedToday = () => new Date().toLocaleDateString('zh-CN')
+export const formattedToday = () => new Date().toLocaleString('zh-CN')
 
 export const formattedYesterday = () => new Date(Date.now() - 86400000).toLocaleDateString('zh-CN')
