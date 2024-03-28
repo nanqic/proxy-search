@@ -5,7 +5,9 @@ import { Stat, stat } from "./schema"
 
 const allowedCities = [
     'Chifeng',
+    'Neijiang',
     '赤峰市',
+    '内江市',
 ]
 
 interface IpResult {
@@ -84,7 +86,7 @@ export const getIpInfo = async (req: Request): Promise<IpInfo> => {
 
 export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
     let { city, country, ip, geo } = await getIpInfo(req)
-    const stats = await getStatByIp(db, ip.slice(0, 15))
+    const stats = await getStatByIp(db, ip.slice(0, 16))
 
     if (stats !== null) {
         let { id, daily, city, words } = stats
@@ -109,7 +111,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
             city = cityres || province || country || '未知'
         }
 
-        await db.insert(stat).values({ ip: ip?.slice(0, 15), total: 1, daily: 1, city, date: formattedToday(), geo: JSON.stringify(geo), words: keywords, status: ipDetail?.isp }).onConflictDoNothing()
+        await db.insert(stat).values({ ip: ip?.slice(0, 16), total: 1, daily: 1, city, date: formattedToday(), geo: JSON.stringify(geo), words: keywords, status: ipDetail?.isp }).onConflictDoNothing()
     }
 
     return await proxySearch(setCache, keywords, page)
