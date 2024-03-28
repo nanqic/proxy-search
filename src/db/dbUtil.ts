@@ -118,6 +118,6 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
     return await proxySearch(setCache, keywords, page)
 }
 
-export const formattedToday = () => new Date().toLocaleString('zh-CN')
+export const formattedToday = () => new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
 
-export const formattedYesterday = () => new Date(Date.now() - 86400000).toLocaleDateString('zh-CN')
+export const formattedYesterday = () => new Date(Date.now() - 86400000).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' })
