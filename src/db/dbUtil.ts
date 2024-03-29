@@ -47,6 +47,10 @@ export const increaseDailyCount = async (db: DrizzleD1Database) => {
             target: stat.id,
             set: {
                 total: sql`${stat.total} + 1`,
+                ip: todayNumber() + '',
+                geo: '',
+                words: '',
+                date: formattedToday()
                 // daily: sql`${stat.daily} + 1`,
             }
         })
@@ -91,11 +95,11 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
 
     if (stats !== null) {
         let { id, daily, city, words } = stats
-        if (country != 'CN') {
-            await db.insert(stat).values({ ip: ip, total: 1, city: city, date: formattedToday(), status: 'limit', words: keywords })
-                .onConflictDoNothing()
-            return toOfficialSite()
-        }
+        // if (country != 'CN') {
+        //     await db.insert(stat).values({ ip: ip, total: 1, city: city, date: formattedToday(), status: 'limit', words: keywords })
+        //         .onConflictDoNothing()
+        //     return toOfficialSite()
+        // }
 
         if (daily && daily > 20 && !allowedCities.includes(city || '')) {
             return listenMilareba()
