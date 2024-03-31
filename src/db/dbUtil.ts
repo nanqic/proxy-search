@@ -1,6 +1,6 @@
 import { DrizzleD1Database } from "drizzle-orm/d1"
-import { eq, ne, sql } from "drizzle-orm"
-import { listenMilareba, proxySearch, toOfficialSite } from "../requests"
+import { and, eq, gte, isNotNull, lte, ne, sql } from "drizzle-orm"
+import { listenMilareba, proxySearch } from "../requests"
 import { Stat, stat } from "./schema"
 
 const allowedCities = [
@@ -23,7 +23,9 @@ export const getCityByIp = async (ip: string): Promise<IpResult> => {
     return await response.json() as IpResult
 }
 
-const todayNumber = () => parseInt(formattedToday().slice(3).replaceAll('/', ''))
+
+const todayNumber = () => parseInt(new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' }).slice(3).replaceAll('/', ''))
+
 
 export const getStatByIp = async (db: DrizzleD1Database, ip: string): Promise<Stat | null> => {
     const result = await db.select().from(stat).where(eq(stat.ip, ip))
@@ -34,24 +36,26 @@ export const getStatByIp = async (db: DrizzleD1Database, ip: string): Promise<St
 }
 
 export const removeLimit = async (db: DrizzleD1Database) => {
+    db.delete(stat)
+        .where(and(isNotNull(stat.words), lte(stat.createdAt, sql`(strftime('%s', 'now', '-7 days')`)))
+        .toSQL()
+
     return await db.update(stat)
         .set({ daily: 0 })
-        .where(ne(stat.ip, 'retain'))
+        .where(isNotNull(stat.words))
         .execute()
 }
 
 export const increaseDailyCount = async (db: DrizzleD1Database) => {
     return db.insert(stat)
-        .values({ id: todayNumber(), total: 1, ip: todayNumber() + '', date: formattedToday() })
+        .values({ id: todayNumber(), total: 1, ip: todayNumber() + '', })
         .onConflictDoUpdate({
             target: stat.id,
             set: {
                 total: sql`${stat.total} + 1`,
                 ip: todayNumber() + '',
-                geo: '',
+                city: '',
                 words: '',
-                date: formattedToday()
-                // daily: sql`${stat.daily} + 1`,
             }
         })
         .returning({ count: stat.total })
@@ -90,16 +94,11 @@ export const getIpInfo = async (req: Request): Promise<IpInfo> => {
 }
 
 export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
-    let { city, country, ip, geo } = await getIpInfo(req)
+    let { city, ip, geo } = await getIpInfo(req)
     const stats = await getStatByIp(db, ip.slice(0, 16))
 
     if (stats !== null) {
         let { id, daily, city, words } = stats
-        // if (country != 'CN') {
-        //     await db.insert(stat).values({ ip: ip, total: 1, city: city, date: formattedToday(), status: 'limit', words: keywords })
-        //         .onConflictDoNothing()
-        //     return toOfficialSite()
-        // }
 
         if (daily && daily > 20 && !allowedCities.includes(city || '')) {
             return listenMilareba()
@@ -116,12 +115,8 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
             city = cityres || province || country || '未知'
         }
 
-        await db.insert(stat).values({ ip: ip?.slice(0, 16), total: 1, daily: 1, city, date: formattedToday(), geo: JSON.stringify(geo), words: keywords, status: ipDetail?.isp }).onConflictDoNothing()
+        await db.insert(stat).values({ ip: ip?.slice(0, 16), total: 1, daily: 1, city, words: keywords, status: ipDetail?.isp }).onConflictDoNothing()
     }
 
     return await proxySearch(setCache, keywords, page)
 }
-
-export const formattedToday = () => new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
-
-export const formattedYesterday = () => new Date(Date.now() - 86400000).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' })

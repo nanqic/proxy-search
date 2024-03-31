@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { sqliteTable, text, integer, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const stat = sqliteTable('stat', {
@@ -7,9 +8,10 @@ export const stat = sqliteTable('stat', {
     daily: integer('daily'),
     city: text('city'),
     status: text('status'),
-    geo: text('geo'),
-    date: text('date'),
     words: text('words'),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+        .notNull()
+        .default(sql`(unixepoch())`),
 }, (stat) => ({
     ipIdx: uniqueIndex('ipIdx').on(stat.ip),
 }));
@@ -25,7 +27,6 @@ export interface Stat {
     daily: number | null
     city: string | null;
     status: string | null;
-    geo: string | null;
-    date: string | null;
     words: string | null;
+    createdAt: Date;
 }

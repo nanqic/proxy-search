@@ -51,8 +51,9 @@ export async function proxySearch(setCache: (key: string, data: string) => Promi
     const regx2 = new RegExp(`href="/j\\?code(=\\w{5}(?:&amp;start=\\d{1,5})?)".target="\\w{5,6}"`, "ig")
     const regx3 = new RegExp(`(?:class="page" )?href="/search/subtitle/(\\S{1,512}\\?page=\\d{1,2})"`, "ig")
 
-    text = text.replace('static.ziguijia.cn/javascripts/searchList.js', 'm.ningway.com/api/searchList.js')
     text = text.replace(regx, '')
+    const regxs = new RegExp(`<script(.|\n)*></script>`)
+    text = text.replace(regxs, '')
     text = text.replace(regx2, (a, b) => {
         // console.log(a,b);
         return `onclick=window.open("/video/${btoa(b.replace('amp;', ''))}")`
@@ -84,9 +85,7 @@ export async function proxySearchDetail(jsonParam: string) {
             'Referer': 'https://ziguijia.com/search/subtitle/',
         }
     })
-    let detail: string = await response.text()
-    // console.log(detail);
-    return new Response(detail, {
+    return new Response(await response.text(), {
         headers: corsHeaders
     })
 }
