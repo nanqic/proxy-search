@@ -80,8 +80,9 @@ interface IpInfo {
         lon: string
         lat: string
     }
+    ua: string
 }
-export const getIpInfo = async (req: Request): Promise<IpInfo> => {
+export const getIpInfo = (req: Request): IpInfo => {
     return {
         ip: req.headers.get('CF-Connecting-IP') || '',
         country: req.cf?.country + '',
@@ -89,12 +90,13 @@ export const getIpInfo = async (req: Request): Promise<IpInfo> => {
         geo: {
             lon: (req.cf?.longitude + '').slice(0, -2),
             lat: (req.cf?.latitude + '').slice(0, -2),
-        }
+        },
+        ua: req.headers.get('User-Agent') + ''
     }
 }
 
 export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
-    let { city, ip, geo } = await getIpInfo(req)
+    let { city, ip, ua } = await getIpInfo(req)
     const stats = await getStatByIp(db, ip.slice(0, 16))
 
     if (stats !== null) {
@@ -114,8 +116,10 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
             const { city: cityres, province, country } = ipDetail
             city = cityres || province || country || '未知'
         }
+        var parser = require('ua-parser-js')
+        let uastr = `${parser(ua).os.name} ${parser(ua).browser.name} ${todayNumber()} ${ipDetail?.isp}`
 
-        await db.insert(stat).values({ ip: ip?.slice(0, 16), total: 1, daily: 1, city, words: keywords, status: ipDetail?.isp }).onConflictDoNothing()
+        await db.insert(stat).values({ ip: ip?.slice(0, 16), total: 1, daily: 1, city, words: keywords, status: uastr }).onConflictDoNothing()
     }
 
     return await proxySearch(setCache, keywords, page)

@@ -1,6 +1,6 @@
 import { corsHeaders, fetchHotwords, proxySearchDetail } from "./requests";
 import { drizzle } from 'drizzle-orm/d1'
-import { countUse, increaseDailyCount, removeLimit, } from "./db/dbUtil";
+import { countUse, getIpInfo, increaseDailyCount, removeLimit, } from "./db/dbUtil";
 
 export interface Env {
 	SEARCH_CACHE: KVNamespace
