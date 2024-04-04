@@ -37,7 +37,9 @@ export default {
 		} else if (url.pathname === "/api/hotwords") {
 			return await fetchHotwords()
 		} else if (url.pathname === "/api/visit") {
-			return Response.json(await increaseDailyCount(db))
+			return new Response(JSON.stringify(await increaseDailyCount(db)), {
+				headers: corsHeaders
+			})
 		}
 
 		return Response.json('')

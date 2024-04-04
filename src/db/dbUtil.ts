@@ -117,9 +117,15 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
             city = cityres || province || country || '未知'
         }
         var parser = require('ua-parser-js')
-        let uastr = `${parser(ua).os.name} ${parser(ua).browser.name} ${todayNumber()} ${ipDetail?.isp}`
+        let uastr = `${parser(ua).os.name} ${parser(ua).browser.name} ${todayNumber()} `
 
-        await db.insert(stat).values({ ip: ip?.slice(0, 16), total: 1, daily: 1, city, words: keywords, status: uastr }).onConflictDoNothing()
+        await db.insert(stat).values({ ip: ip?.slice(0, 16), total: 1, daily: 1, city, words: keywords, status: uastr + ipDetail?.isp }).onConflictDoNothing()
+        await db.insert(stat).values({ ip: uastr, total: 1, daily: 0, city, words: keywords, status: uastr })
+            .onConflictDoUpdate({
+                target: stat.id,
+                set: { total: sql`${stat.total} + 1`, daily: 0, city }
+            })
+            .execute()
     }
 
     return await proxySearch(setCache, keywords, page)

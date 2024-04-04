@@ -76,7 +76,6 @@ export async function proxySearch(setCache: (key: string, data: string) => Promi
 }
 
 export async function proxySearchDetail(jsonParam: string) {
-    // console.log(jsonParam);
     let n = `https://ziguijia.com/q/search/${encodeURI(jsonParam)}`
     let response = await fetch(n, {
         method: 'GET',
@@ -92,13 +91,13 @@ export async function proxySearchDetail(jsonParam: string) {
 
 function getCodes(text: string): string {
     const regx = new RegExp(`data-code="(\\w{5})"`, "ig")
-    let codes = ''
+    let codes = '&codes='
     let match;
     while ((match = regx.exec(text)) !== null) {
         const codeValue = match[1];
-        codes += `&code=${codeValue}`
+        codes += `${codeValue},`
     }
-    return codes
+    return codes.slice(0, -1)
 }
 
 export async function fetchHotwords(): Promise<Response> {
