@@ -30,7 +30,6 @@ async function sendErrorLog(error: Error): Promise<void> {
 		message: error.message,
 		stack: error.stack,
 		timestamp: new Date().toISOString(),
-		name: error.name
 	};
 	console.log('sendErrorLog', errorPayload);
 	await postSearchData({ keywords: 'error', comment: JSON.stringify(errorPayload) })

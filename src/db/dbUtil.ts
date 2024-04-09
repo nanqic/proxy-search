@@ -96,7 +96,7 @@ export const getIpInfo = (req: Request): IpInfo => {
 }
 
 export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
-    let { city, ip, ua } = await getIpInfo(req)
+    let { city, ip, ua } = getIpInfo(req)
     const stats = await getStatByIp(db, ip.slice(0, 16))
 
     if (stats !== null) {
@@ -119,11 +119,13 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
         var parser = require('ua-parser-js')
         let uastr = `${todayNumber()} ${parser(ua).os.name} ${parser(ua).browser.name} `
 
-        await db.insert(stat).values({ ip: ip?.slice(0, 16), total: 1, daily: 1, city, words: keywords, status: uastr + (ipDetail?.isp || '') }).onConflictDoNothing()
-        await db.insert(stat).values({ ip: uastr, total: 1, daily: 0, city, words: keywords, status: uastr })
+        await db.insert(stat).values({ ip: ip?.slice(0, 16), total: 1, daily: 1, city, words: keywords, status: uastr + (ipDetail?.isp || '') })
             .onConflictDoUpdate({
                 target: stat.id,
-                set: { total: sql`${stat.total} + 1`, daily: 0, city }
+                set: {
+                    total: sql`${stat.total} + 1`,
+                    daily: sql`${stat.daily} + 1`,
+                }
             })
             .execute()
     }
