@@ -37,8 +37,8 @@ export const getStatByIp = async (db: DrizzleD1Database, ip: string): Promise<St
 
 export const removeLimit = async (db: DrizzleD1Database) => {
     db.delete(stat)
-        .where(and(isNotNull(stat.words), lte(stat.createdAt, sql`(strftime('%s', 'now', '-7 days')`)))
-        .toSQL()
+        .where(and(isNotNull(stat.words), lte(stat.createdAt, sql`(strftime('%s', 'now', '-3 days')`)))
+        .execute()
 
     return await db.update(stat)
         .set({ daily: 0 })

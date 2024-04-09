@@ -9,7 +9,7 @@ export const corsHeaders = {
 export interface SearchComment {
     keywords: string
     comment: string
-    link: string
+    link?: string
 }
 
 export async function postSearchData({ keywords, comment, link }: SearchComment) {
