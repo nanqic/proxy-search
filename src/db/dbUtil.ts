@@ -84,7 +84,7 @@ interface IpInfo {
 }
 export const getIpInfo = (req: Request): IpInfo => {
     return {
-        ip: req.headers.get('CF-Connecting-IP') || '',
+        ip: req.headers.get('CF-Connecting-IP')?.slice(0, 16) || '未知ip',
         country: req.cf?.country + '',
         city: req.cf?.city + '',
         geo: {
@@ -97,7 +97,7 @@ export const getIpInfo = (req: Request): IpInfo => {
 
 export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
     let { city, ip, ua } = getIpInfo(req)
-    const stats = await getStatByIp(db, ip.slice(0, 16))
+    const stats = await getStatByIp(db, ip)
 
     if (stats !== null) {
         let { id, daily, city, words } = stats
@@ -119,7 +119,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
         var parser = require('ua-parser-js')
         let uastr = `${todayNumber()} ${parser(ua).os.name} ${parser(ua).browser.name} `
 
-        await db.insert(stat).values({ ip: ip?.slice(0, 16), total: 1, daily: 1, city, words: keywords, status: uastr + (ipDetail?.isp || '') })
+        await db.insert(stat).values({ ip, total: 1, daily: 1, city, words: keywords, status: uastr + (ipDetail?.isp || '') })
             .onConflictDoUpdate({
                 target: stat.id,
                 set: {
