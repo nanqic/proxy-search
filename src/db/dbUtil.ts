@@ -111,8 +111,8 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
     if (stats !== null) {
         let { id, daily, city, words } = stats
 
-        if (daily && daily > 20 && !allowedCities.includes(city || '') ||
-            (limitedCities.includes(city || '') && daily && daily >= 3)
+        if ((daily && daily > 20 && !allowedCities.includes(city || '') )||
+            (limitedCities.includes(city || '') && daily && daily >= 5)
         ) {
             return listenMilareba()
         }
