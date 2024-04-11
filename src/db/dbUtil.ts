@@ -5,9 +5,9 @@ import { Stat, stat } from "./schema"
 
 const limitedCities = [
     'Liaocheng',
-    '聊城',
+    '聊城市',
     'Zhumadian',
-    '驻马店',
+    '驻马店市',
 ]
 
 const allowedCities = [
