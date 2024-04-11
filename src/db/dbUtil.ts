@@ -3,12 +3,20 @@ import { and, eq, gte, isNotNull, lte, ne, sql } from "drizzle-orm"
 import { listenMilareba, proxySearch } from "../requests"
 import { Stat, stat } from "./schema"
 
+const limitedCities = [
+    'Liaocheng',
+    '聊城',
+    'Zhumadian',
+    '驻马店',
+]
+
 const allowedCities = [
     'Chifeng',
     'Neijiang',
     '赤峰市',
     '内江市',
     '珠海市',
+    'Zhuhai',
 ]
 
 interface IpResult {
@@ -56,6 +64,7 @@ export const increaseDailyCount = async (db: DrizzleD1Database) => {
                 ip: todayNumber() + '',
                 city: '',
                 words: '',
+                status:''
             }
         })
         .returning({ count: stat.total })
@@ -102,7 +111,9 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
     if (stats !== null) {
         let { id, daily, city, words } = stats
 
-        if (daily && daily > 20 && !allowedCities.includes(city || '')) {
+        if (daily && daily > 20 && !allowedCities.includes(city || '') ||
+            (limitedCities.includes(city || '') && daily && daily >= 3)
+        ) {
             return listenMilareba()
         }
         // 增加计数
