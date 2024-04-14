@@ -6,8 +6,6 @@ import { Stat, stat } from "./schema"
 const limitedCities = [
     'Liaocheng',
     '聊城市',
-    'Zhumadian',
-    '驻马店市',
 ]
 
 const allowedCities = [
@@ -44,9 +42,9 @@ export const getStatByIp = async (db: DrizzleD1Database, ip: string): Promise<St
 }
 
 export const removeLimit = async (db: DrizzleD1Database) => {
-    db.delete(stat)
-        .where(and(isNotNull(stat.words), lte(stat.createdAt, sql`(strftime('%s', 'now', '-3 days')`)))
-        .execute()
+    // db.delete(stat)
+    //     .where(and(isNotNull(stat.words), lte(stat.createdAt, sql`(strftime('%s', 'now', '-3 days')`)))
+    //     .execute()
 
     return await db.update(stat)
         .set({ daily: 0 })
@@ -64,7 +62,7 @@ export const increaseDailyCount = async (db: DrizzleD1Database) => {
                 ip: todayNumber() + '',
                 city: '',
                 words: '',
-                status:''
+                status: ''
             }
         })
         .returning({ count: stat.total })
@@ -111,9 +109,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
     if (stats !== null) {
         let { id, daily, city, words } = stats
 
-        if ((daily && daily > 20 && !allowedCities.includes(city || '') )||
-            (limitedCities.includes(city || '') && daily && daily >= 5)
-        ) {
+        if (daily && daily > 5 && !allowedCities.includes(city || '')) {
             return listenMilareba()
         }
         // 增加计数
@@ -140,6 +136,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
             })
             .execute()
     }
+    return listenMilareba()
 
-    return await proxySearch(setCache, keywords, page)
+    // return await proxySearch(setCache, keywords, page)
 }

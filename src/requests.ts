@@ -36,7 +36,7 @@ export async function postSearchData({ keywords, comment, link }: SearchComment)
 }
 
 export const listenMilareba = (): Response => {
-    return new Response(`今日资源有限，先听一下米拉日巴大师的 <a href='//a.hdcxb.net/login2' target='_blank'>道歌</a> 吧`, { headers: corsHeaders })
+    return new Response(`资源不可用，听一下米拉日巴大师的 <a href='//a.hdcxb.net/login2' target='_blank'>道歌</a> 吧`, { headers: corsHeaders })
 }
 
 export const toOfficialSite = (): Response => {
