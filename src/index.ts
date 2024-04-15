@@ -50,12 +50,7 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
 		&& request.method == 'POST') {
 		pageParam == '1' && (pageParam = '')
 
-		let cache = await getCache(keywordsParam + pageParam)
-		if (cache) {
-			return new Response(cache, { headers: corsHeaders })
-		}
-
-		return await countUse(db, request, setCache, keywordsParam, pageParam)
+		return await countUse(db, request,getCache, setCache, keywordsParam, pageParam)
 
 	} else if (url.pathname === "/api/q" && request.method == 'GET') {
 		const jsonParam = decodeURI(searchParams.get('json') || '')

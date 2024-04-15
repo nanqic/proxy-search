@@ -1,11 +1,16 @@
 import { DrizzleD1Database } from "drizzle-orm/d1"
 import { and, eq, gte, isNotNull, lte, ne, sql } from "drizzle-orm"
-import { listenMilareba, proxySearch } from "../requests"
+import { corsHeaders, listenMilareba, proxySearch } from "../requests"
 import { Stat, stat } from "./schema"
 
 const limitedCities = [
-    'Liaocheng',
+    '',
     '聊城市',
+    'Liaocheng',
+    '珠海市',
+    'Zhuhai',
+    '驻马店市',
+    'Zhumadian',
 ]
 
 const allowedCities = [
@@ -13,8 +18,6 @@ const allowedCities = [
     'Neijiang',
     '赤峰市',
     '内江市',
-    '珠海市',
-    'Zhuhai',
 ]
 
 interface IpResult {
@@ -102,14 +105,19 @@ export const getIpInfo = (req: Request): IpInfo => {
     }
 }
 
-export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> => {
+export const countUse = async (db: DrizzleD1Database, req: Request,
+    getCache: (key: string) => Promise<string | null>,
+    setCache: (key: string, data: string) => Promise<void>,
+    keywords: string, page: string): Promise<Response> => {
     let { city, ip, ua } = getIpInfo(req)
     const stats = await getStatByIp(db, ip)
 
     if (stats !== null) {
         let { id, daily, city, words } = stats
 
-        if (daily && daily > 5 && !allowedCities.includes(city || '')) {
+        if ((daily && daily > 5 && !allowedCities.includes(city || '')) ||
+            limitedCities.includes(city || '')
+        ) {
             return listenMilareba()
         }
         // 增加计数
@@ -135,6 +143,11 @@ export const countUse = async (db: DrizzleD1Database, req: Request, setCache: (k
                 }
             })
             .execute()
+    }
+
+    let cache = await getCache(keywords)
+    if (cache) {
+        return new Response(cache, { headers: corsHeaders })
     }
     return listenMilareba()
 
