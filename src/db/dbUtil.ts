@@ -55,8 +55,9 @@ export const removeLimit = async (db: DrizzleD1Database) => {
         .execute()
 }
 
-export const increaseDailyCount = async (db: DrizzleD1Database) => {
-    return db.insert(stat)
+export const increaseDailyCount = async (db: DrizzleD1Database, req: Request) => {
+    let { city, ip, ua } = await getIpInfo(req)
+    let count = await db.insert(stat)
         .values({ id: todayNumber(), total: 1, ip: todayNumber() + '', })
         .onConflictDoUpdate({
             target: stat.id,
@@ -69,6 +70,8 @@ export const increaseDailyCount = async (db: DrizzleD1Database) => {
             }
         })
         .returning({ count: stat.total })
+
+    return { ip, city, ua, count }
 }
 
 export const increaseStat = async (db: DrizzleD1Database, id: number, words: string) => {
@@ -91,17 +94,29 @@ interface IpInfo {
         lat: string
     }
     ua: string
+    isp: string
 }
-export const getIpInfo = (req: Request): IpInfo => {
+export const getIpInfo = async (req: Request): Promise<IpInfo> => {
+    let city = req.cf?.city + ''
+    let ip = req.headers.get('CF-Connecting-IP')?.slice(0, 16) || '未知ip'
+    let isp = ''
+
+    if (city === 'undefined') {
+        const { city: cityres, province, country, isp: ispres } = await getCityByIp(ip)
+        city = cityres || province || country || '未知'
+        isp = ispres
+    }
+
     return {
-        ip: req.headers.get('CF-Connecting-IP')?.slice(0, 16) || '未知ip',
+        ip,
         country: req.cf?.country + '',
-        city: req.cf?.city + '',
+        city,
         geo: {
             lon: (req.cf?.longitude + '').slice(0, -2),
             lat: (req.cf?.latitude + '').slice(0, -2),
         },
-        ua: req.headers.get('User-Agent') + ''
+        ua: req.headers.get('User-Agent') + '',
+        isp
     }
 }
 
@@ -109,7 +124,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request,
     getCache: (key: string) => Promise<string | null>,
     setCache: (key: string, data: string) => Promise<void>,
     keywords: string, page: string): Promise<Response> => {
-    let { city, ip, ua } = getIpInfo(req)
+    let { city, ip, ua, isp } = await getIpInfo(req)
     const stats = await getStatByIp(db, ip)
 
     if (stats !== null) {
@@ -125,16 +140,11 @@ export const countUse = async (db: DrizzleD1Database, req: Request,
         await increaseStat(db, id, words)
     } else {
         // 创建计数
-        let ipDetail
-        if (city === 'undefined') {
-            ipDetail = await getCityByIp(ip)
-            const { city: cityres, province, country } = ipDetail
-            city = cityres || province || country || '未知'
-        }
+
         var parser = require('ua-parser-js')
         let uastr = `${todayNumber()} ${parser(ua).os.name} ${parser(ua).browser.name} `
 
-        await db.insert(stat).values({ ip, total: 1, daily: 1, city, words: keywords, status: uastr + (ipDetail?.isp || '') })
+        await db.insert(stat).values({ ip, total: 1, daily: 1, city, words: keywords, status: uastr + isp })
             .onConflictDoUpdate({
                 target: stat.id,
                 set: {

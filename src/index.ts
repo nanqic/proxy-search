@@ -50,7 +50,7 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
 		&& request.method == 'POST') {
 		pageParam == '1' && (pageParam = '')
 
-		return await countUse(db, request,getCache, setCache, keywordsParam, pageParam)
+		return await countUse(db, request, getCache, setCache, keywordsParam, pageParam)
 
 	} else if (url.pathname === "/api/q" && request.method == 'GET') {
 		const jsonParam = decodeURI(searchParams.get('json') || '')
@@ -59,7 +59,7 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
 	} else if (url.pathname === "/api/hotwords") {
 		return await fetchHotwords()
 	} else if (url.pathname === "/api/visit") {
-		return new Response(JSON.stringify(await increaseDailyCount(db)), {
+		return new Response(JSON.stringify(await increaseDailyCount(db, request)), {
 			headers: corsHeaders
 		})
 	}
