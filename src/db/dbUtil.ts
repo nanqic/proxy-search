@@ -9,8 +9,8 @@ const limitedCities = [
     'Liaocheng',
     '珠海市',
     'Zhuhai',
-    '驻马店市',
-    'Zhumadian',
+    '成都市',
+    'Chengdu',
 ]
 
 const allowedCities = [
@@ -18,6 +18,8 @@ const allowedCities = [
     'Neijiang',
     '赤峰市',
     '内江市',
+    '驻马店市',
+    'Zhumadian',
 ]
 
 interface IpResult {
@@ -130,7 +132,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request,
     if (stats !== null) {
         let { id, daily, city, words } = stats
 
-        if ((daily && daily > 5 && !allowedCities.includes(city || '')) ||
+        if ((daily && daily >= 5 && !allowedCities.includes(city || '')) ||
             limitedCities.includes(city || '')
         ) {
             return listenMilareba()
@@ -159,7 +161,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request,
     if (cache) {
         return new Response(cache, { headers: corsHeaders })
     }
-    return listenMilareba()
+    // return listenMilareba()
 
-    // return await proxySearch(setCache, keywords, page)
+    return await proxySearch(setCache, keywords, page)
 }

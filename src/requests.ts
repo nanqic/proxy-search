@@ -44,7 +44,11 @@ export const toOfficialSite = (): Response => {
 }
 
 export async function proxySearch(setCache: (key: string, data: string) => Promise<void>, keywords: string, page: string): Promise<Response> {
-    let url = `https://ziguijia.com/search/subtitle/${encodeURI(keywords)}?page=${page}`
+    // let url = `https://ziguijia.com/search?auth=733175&keywords=${encodeURI(keywords)}${page?'&page='+page:''}`
+
+    let url = `https://ip.ningway.com/api/proxys?q=${keywords}${page ? '&page=' + page : ''}`
+    // console.log("url:" ,url);
+    
     const res = await fetch(url)
     let text = await res.text()
     const regx = new RegExp(`<(script|style|footer|button)(.|\n)*?>(.|\n)*?</(script|style|footer|button)>|<!DOC(.|\n)*?<(hr/?)>|播放全部`)
@@ -66,7 +70,7 @@ export async function proxySearch(setCache: (key: string, data: string) => Promi
     let codes = getCodes(text)
     text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, codes)
 
-    if (!text.includes("没有视频符合")) {
+    if (text.includes("视频")) {
         await setCache(keywords + page, text)
     }
 

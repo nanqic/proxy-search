@@ -38,7 +38,8 @@ async function sendErrorLog(error: Error): Promise<void> {
 async function handleRequest(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 	const setCache = async (key: string, data: string) => env.SEARCH_CACHE.put(key, data);
 	const getCache = async (key: string) => env.SEARCH_CACHE.get(key);
-	const getCacheList = async () => env.SEARCH_CACHE.list();
+	const deleteCache = async (key: string) => env.SEARCH_CACHE.delete(key);
+	const getCacheList = async (cursor: string) => env.SEARCH_CACHE.list({ cursor: cursor });
 	const url = new URL(request.url);
 	const searchParams = new URLSearchParams(url.search)
 	const keywordsParam = decodeURI(searchParams.get('keywords') || '')
@@ -47,7 +48,8 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
 	const db = drizzle(env.DB);
 
 	if (url.pathname === "/api" && keywordsParam != ''
-		&& request.method == 'POST') {
+		&& request.method == 'POST'
+	) {
 		pageParam == '1' && (pageParam = '')
 
 		return await countUse(db, request, getCache, setCache, keywordsParam, pageParam)
@@ -58,6 +60,18 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
 		return await proxySearchDetail(jsonParam)
 	} else if (url.pathname === "/api/hotwords") {
 		return await fetchHotwords()
+	} else if (url.pathname === "/api/err-keys") {
+		return Response.json('')
+	} else if (url.pathname === "/api/rm-keys"
+		&& request.method == 'POST'
+	) {
+		let name = decodeURI(searchParams.get('name') || '')
+		// let rmList = ['']
+		// for (let name of rmList) {
+		// 	await deleteCache(name)
+		// }
+		let res = await deleteCache(name)
+		return new Response(`${name} delete ${res}`)
 	} else if (url.pathname === "/api/visit") {
 		return new Response(JSON.stringify(await increaseDailyCount(db, request)), {
 			headers: corsHeaders
@@ -65,5 +79,34 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
 	}
 
 	return Response.json('')
+
+	const findErrKeys = async () => {
+		let list_complete = false
+		let cursor = ''
+		let list
+		let deleteList = ['']
+		list = await getCacheList(cursor)
+		list_complete = list.list_complete
+		//@ts-ignore
+		cursor = list?.cursor
+		let { keys } = list
+		// let n = 0
+		let n = 499
+		for (let i = n; i < 500 + n; i++) {
+			if (typeof keys[i].name === 'string') {
+				let value = await getCache(keys[i].name)
+				if (value?.indexOf('error') != -1) {
+					deleteList.push(keys[i].name)
+				}
+			}
+		}
+
+		return Response.json({
+			deleteList,
+			size: list.keys.length,
+			cursor
+		})
+	}
 };
+
 
