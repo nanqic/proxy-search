@@ -20,6 +20,8 @@ const allowedCities = [
     '内江市',
     '驻马店市',
     'Zhumadian',
+    '烟台市',
+    'Yantai'
 ]
 
 interface IpResult {
