@@ -1,6 +1,6 @@
 import { corsHeaders, fetchHotwords, postSearchData, proxySearchDetail } from "./requests";
 import { drizzle } from 'drizzle-orm/d1'
-import { countUse, getIpInfo, increaseDailyCount, removeLimit, } from "./db/dbUtil";
+import { checkTsKey, countUse, getIpInfo, increaseDailyCount, removeLimit, } from "./db/dbUtil";
 
 export interface Env {
 	SEARCH_CACHE: KVNamespace
@@ -42,7 +42,7 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
 	const getCacheList = async (cursor: string) => env.SEARCH_CACHE.list({ cursor: cursor });
 	const url = new URL(request.url);
 	const searchParams = new URLSearchParams(url.search)
-	const keywordsParam = decodeURI(searchParams.get('keywords') || '')
+	const keywordsParam = decodeURI(searchParams.get('q') || '')
 	let pageParam = decodeURI(searchParams.get('page') || '')
 
 	const db = drizzle(env.DB);
@@ -51,6 +51,9 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
 		&& request.method == 'POST'
 	) {
 		pageParam == '1' && (pageParam = '')
+		let keyParam = decodeURI(searchParams.get('key') || '')
+		if (!checkTsKey(keyParam))
+			return new Response()
 
 		return await countUse(db, request, getCache, setCache, keywordsParam, pageParam)
 

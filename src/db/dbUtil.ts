@@ -167,3 +167,5 @@ export const countUse = async (db: DrizzleD1Database, req: Request,
 
     return await proxySearch(setCache, keywords, page)
 }
+
+export const checkTsKey = (key: string): boolean => Math.abs(parseInt(Date.now().toString().slice(8, 10)) - parseInt(atob(key).slice(1, 3))) < 10 
