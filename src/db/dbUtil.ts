@@ -5,12 +5,8 @@ import { Stat, stat } from "./schema"
 
 const limitedCities = [
     '',
-    '聊城市',
-    'Liaocheng',
     '珠海市',
     'Zhuhai',
-    '成都市',
-    'Chengdu',
 ]
 
 const allowedCities = [
@@ -21,7 +17,9 @@ const allowedCities = [
     '驻马店市',
     'Zhumadian',
     '烟台市',
-    'Yantai'
+    'Yantai',
+    '西安市',
+    'Xian'
 ]
 
 interface IpResult {
@@ -105,7 +103,8 @@ export const getIpInfo = async (req: Request): Promise<IpInfo> => {
     let ip = req.headers.get('CF-Connecting-IP')?.slice(0, 16) || '未知ip'
     let isp = ''
 
-    if (city === 'undefined') {
+    // if (city === 'undefined') {
+    if (true) {
         const { city: cityres, province, country, isp: ispres } = await getCityByIp(ip)
         city = cityres || province || country || '未知'
         isp = ispres
@@ -134,7 +133,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request,
     if (stats !== null) {
         let { id, daily, city, words } = stats
 
-        if ((daily && daily >= 5 && !allowedCities.includes(city || '')) ||
+        if ((daily && daily >= 15 && !allowedCities.includes(city || '')) ||
             limitedCities.includes(city || '')
         ) {
             return listenMilareba()
@@ -159,7 +158,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request,
             .execute()
     }
 
-    let cache = await getCache(keywords)
+    let cache = await getCache(keywords + page)
     if (cache) {
         return new Response(cache, { headers: corsHeaders })
     }
