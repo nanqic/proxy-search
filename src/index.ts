@@ -65,14 +65,12 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
 		return await fetchHotwords()
 	} else if (url.pathname === "/api/err-keys") {
 		return Response.json('')
-	} else if (url.pathname === "/api/rm-keys"
+	}
+	// rm error key by user search 
+	else if (url.pathname === "/api/rm-keys"
 		&& request.method == 'POST'
 	) {
 		let name = decodeURI(searchParams.get('name') || '')
-		// let rmList = ['']
-		// for (let name of rmList) {
-		// 	await deleteCache(name)
-		// }
 		let res = await deleteCache(name)
 		return new Response(`${name} delete ${res}`)
 	} else if (url.pathname === "/api/visit") {
@@ -82,34 +80,6 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext):
 	}
 
 	return Response.json('')
-
-	const findErrKeys = async () => {
-		let list_complete = false
-		let cursor = ''
-		let list
-		let deleteList = ['']
-		list = await getCacheList(cursor)
-		list_complete = list.list_complete
-		//@ts-ignore
-		cursor = list?.cursor
-		let { keys } = list
-		// let n = 0
-		let n = 499
-		for (let i = n; i < 500 + n; i++) {
-			if (typeof keys[i].name === 'string') {
-				let value = await getCache(keys[i].name)
-				if (value?.indexOf('error') != -1) {
-					deleteList.push(keys[i].name)
-				}
-			}
-		}
-
-		return Response.json({
-			deleteList,
-			size: list.keys.length,
-			cursor
-		})
-	}
 };
 
 
