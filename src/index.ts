@@ -13,7 +13,7 @@ export default {
 			return await handleRequest(request, env, ctx)
 
 		} catch (error) {
-			await sendErrorLog(error as Error);
+			// await sendErrorLog(error as Error);
 			return new Response("Internal Server Error", { status: 500 });
 		}
 	},
