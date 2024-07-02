@@ -48,7 +48,7 @@ export async function proxySearch(setCache: (key: string, data: string) => Promi
 
     let url = `https://ip.ningway.com/api/proxys?q=${keywords}${page ? '&page=' + page : ''}`
     // console.log("url:" ,url);
-    
+
     const res = await fetch(url)
     let text = await res.text()
     const regx = new RegExp(`<(script|style|footer|button)(.|\n)*?>(.|\n)*?</(script|style|footer|button)>|<!DOC(.|\n)*?<(hr/?)>|播放全部`)
@@ -68,13 +68,13 @@ export async function proxySearch(setCache: (key: string, data: string) => Promi
     })
 
     let codes = getCodes(text)
-    text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, codes)
+    text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, '').replace(/auth=\d+&(?:amp;)/, '').replace('&amp;page=null', '')
 
     if (text.includes("视频")) {
         await setCache(keywords + page, text)
     }
 
-    return new Response(text, {
+    return new Response(text + codes, {
         headers: corsHeaders
     });
 }
