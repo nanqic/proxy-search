@@ -74,7 +74,7 @@ export async function proxySearch(setCache: (key: string, data: string) => Promi
         await setCache(keywords + page, text)
     }
 
-    return new Response(text + codes, {
+    return new Response(text, {
         headers: corsHeaders
     });
 }
