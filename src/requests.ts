@@ -51,7 +51,7 @@ export async function proxySearch(setCache: (key: string, data: string) => Promi
 
     const res = await fetch(url)
     let text = await res.text()
-    const regx = new RegExp(`<(script|style|footer|button)(.|\n)*?>(.|\n)*?</(script|style|footer|button)>|<!DOC(.|\n)*?<(hr/?)>|播放全部`)
+    const regx = new RegExp(`<(script|style|footer|button)(.|\n)*?>(.|\n)*?</(script|style|footer|button)>|<!DOC(.|\n)*?<(hr/?)>`)
     const regx2 = new RegExp(`href="/j\\?code(=\\w{5}(?:&amp;start=\\d{1,5})?)".target="\\w{5,6}"`, "ig")
     const regx3 = new RegExp(`(?:class="page" )?href="/search/subtitle/(\\S{1,512}\\?page=\\d{1,2})"`, "ig")
 
@@ -60,15 +60,16 @@ export async function proxySearch(setCache: (key: string, data: string) => Promi
     text = text.replace(regxs, '')
     text = text.replace(regx2, (a, b) => {
         // console.log(a,b);
-        return `onclick=window.open("/video/${btoa(b.replace('amp;', ''))}")`
+        return `onclick=window.open("/video?no${b.replace('amp;', '')}")`
     })
     text = text.replace(regx3, (a, b) => {
         // console.log(a, b, `onclick=window.open("/vsearch/+${b}")`);
         return `onclick=window.open("/vsearch/${b}")`
     })
+    // 播放全部链接替换
+    text = text.replace(/\/search\/player/, `/search?codes=${getCodes(text)}`)
 
-    let codes = getCodes(text)
-    text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, '').replace(/auth=\d+&(?:amp;)/, '').replace('&amp;page=null', '')
+    text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, '').replace('&amp;page=null', '').replace(/href="\/search/ig, ' target="_blank" href="/vsearch').replace(/keywords=/ig, '/').replace(/\?auth=\d+&amp;/ig, '').replace(/&(?:amp;)page/ig, '?page')
 
     if (text.includes("视频")) {
         await setCache(keywords + page, text)
@@ -95,7 +96,7 @@ export async function proxySearchDetail(jsonParam: string) {
 
 function getCodes(text: string): string {
     const regx = new RegExp(`data-code="(\\w{5})"`, "ig")
-    let codes = '&codes='
+    let codes = ''
     let match;
     while ((match = regx.exec(text)) !== null) {
         const codeValue = match[1];
