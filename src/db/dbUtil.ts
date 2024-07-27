@@ -133,7 +133,7 @@ export const countUse = async (db: DrizzleD1Database, req: Request,
     if (stats !== null) {
         let { id, daily, city, words } = stats
 
-        if ((daily && daily >= 21 && !allowedCities.includes(city || '')) ||
+        if ((daily && daily >= 33 && !allowedCities.includes(city || '')) ||
             limitedCities.includes(city || '')
         ) {
             return listenMilareba()

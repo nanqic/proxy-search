@@ -66,10 +66,14 @@ export async function proxySearch(setCache: (key: string, data: string) => Promi
         // console.log(a, b, `onclick=window.open("/vsearch/+${b}")`);
         return `onclick=window.open("/vsearch/${b}")`
     })
-    // 播放全部链接替换
-    text = text.replace(/\/search\/player/, `/search?codes=${getCodes(text)}`)
+    
+    text = text
+    .replace(/href="\/search/ig, ' target="_blank" href="/vsearch')
+    .replace(/keywords=/ig, '/').replace(/\?auth=\d+&amp;/ig, '')
+    .replace(/&(?:amp;)page/ig, '?page')
 
-    text = text.replace(/&(?:amp;)?cat=null&(?:amp;)?type=subtitle&(?:amp;)?sort=appears/, '').replace('&amp;page=null', '').replace(/href="\/search/ig, ' target="_blank" href="/vsearch').replace(/keywords=/ig, '/').replace(/\?auth=\d+&amp;/ig, '').replace(/&(?:amp;)page/ig, '?page')
+    // 播放全部链接替换
+    text = text.replace(/\/vsearch\/player\//, `/search?codes=${getCodes(text)}&keywords=`)
 
     if (text.includes("视频")) {
         await setCache(keywords + page, text)
