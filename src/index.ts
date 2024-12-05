@@ -1,6 +1,6 @@
-import { corsHeaders, fetchHotwords, postSearchData, proxySearchDetail } from "./requests";
+import { corsHeaders, fetchHotwords, proxySearchDetail } from "./requests";
 import { drizzle } from 'drizzle-orm/d1'
-import { checkTsKey, countUse, getIpInfo, increaseDailyCount, removeLimit, } from "./db/dbUtil";
+import { checkTsKey, countUse, increaseDailyCount, removeLimit, } from "./db/dbUtil";
 
 export interface Env {
 	SEARCH_CACHE: KVNamespace
@@ -24,16 +24,6 @@ export default {
 	},
 };
 
-// 定义发送日志到外部服务的函数
-async function sendErrorLog(error: Error): Promise<void> {
-	const errorPayload = {
-		message: error.message,
-		stack: error.stack,
-		timestamp: new Date().toISOString(),
-	};
-	console.log('sendErrorLog', errorPayload);
-	await postSearchData({ keywords: 'error', comment: JSON.stringify(errorPayload) })
-}
 
 async function handleRequest(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 	const setCache = async (key: string, data: string) => env.SEARCH_CACHE.put(key, data);
